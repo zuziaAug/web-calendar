@@ -198,7 +198,7 @@ int main() {
     server_addr.sin_addr.s_addr = INADDR_ANY;
     server_addr.sin_port = htons(8881);
 
-    if (bind(server_sock, (struct sockaddr*)&server_addr, sizeof(server_addr)) == -1) {
+    if (::bind(server_sock, (struct sockaddr*)&server_addr, sizeof(server_addr)) == -1) {
         perror("Bind failed");
         return 1;
     }
