@@ -15,6 +15,7 @@
 #include <algorithm> 
 
 using namespace std;
+int port = 8888;
 
 struct DateTime {
     int year;
@@ -41,6 +42,7 @@ struct Request {
     int event_id;
 };
 
+// Struct to hold shared data between threads
 struct ThreadData {
     std::mutex data_mutex;
     std::unordered_map<int, int>& client_id_sock_map;
@@ -51,8 +53,9 @@ struct ThreadData {
     ThreadData(std::unordered_map<int, int>& client_map, std::vector<int>& all_clients, int sock)
         : client_id_sock_map(client_map), active_clients(all_clients), client_sock(sock) {}
 
+    // Function to remove from active clients 
     void removeClientIdFromLists(int client_id) {
-        // Usuwanie z active_clients
+        
         auto active_clients_it = std::find(active_clients.begin(), active_clients.end(), client_id);
         if (active_clients_it != active_clients.end()) {
             active_clients.erase(active_clients_it);
@@ -60,6 +63,7 @@ struct ThreadData {
     }
 };
 
+// Parsing client's request from the received buffer
 Request parseRequest(const char* buffer) {
     istringstream iss(buffer);
     Request request;
@@ -118,14 +122,25 @@ void showEvents(int client_sock, const Request& request, ThreadData& thread_data
     string response_message = "Calendar events:\n";
 
     lock_guard<mutex> lock(thread_data.data_mutex);
-    
+
     for (const CalendarEvent& event : thread_data.calendar) {
         response_message += "ID: " + to_string(event.event_id) + ", Description: " + event.event_description + "\n";
     }
 
-    send(client_sock, response_message.c_str(), response_message.length(), 0);
+    // Print the events to the server console
+    cout << "Server response:" << response_message << endl;
+
+    // Send the events to the client
+    ssize_t bytes_sent = send(client_sock, response_message.c_str(), response_message.length(), 0);
+    
+    if (bytes_sent == -1) {
+        perror("Error sending data to client");
+    } else {
+        cout << "Server sent " << bytes_sent << " bytes to the client." << endl;
+    }
 }
 
+// Function to handle client registration
 void registerClient(int client_sock, const Request& request, ThreadData& thread_data) {
     string response_message = "Connected successfully!";
     unordered_map<int, int>& client_id_sock_map = thread_data.client_id_sock_map;
@@ -135,10 +150,11 @@ void registerClient(int client_sock, const Request& request, ThreadData& thread_
     {
         thread_data.active_clients.push_back(request.client_id);
     }
-        //we convert string to byte array and send to client
+        // Converting string to byte array and sending it to client
         send(client_sock, response_message.c_str(), response_message.length(), 0);
 }
 
+// Function to show all active clients
 void showClients(int client_sock, const Request& request, ThreadData& thread_data) {
     string response_message = "Active client ids: [";
     cout << "Show all active clients for client with id: " << to_string(request.client_id) << endl;
@@ -152,6 +168,39 @@ void showClients(int client_sock, const Request& request, ThreadData& thread_dat
     send(client_sock, response_message.c_str(), response_message.length(), 0);
 }
 
+// Function to check if client is still connected
+void* checkClientConnections(void* arg) {
+    ThreadData* thread_data = (ThreadData*)arg;
+
+    while (true) {
+        sleep(5);
+        {
+            lock_guard<mutex> lock(thread_data->data_mutex);
+            auto it = thread_data->client_id_sock_map.begin();
+            while (it != thread_data->client_id_sock_map.end()) {
+                int client_id = it->first;
+                int client_sock = it->second;
+
+                char buffer[1];
+                int result = recv(client_sock, buffer, 1, MSG_DONTWAIT);
+
+                if (result == 0) {
+                    if (result == 0) {
+                        cout << "Client with id: " << to_string(client_id) << " disconnected " << endl;
+                    } else {
+                        perror("Recv failed");
+                    }
+                    thread_data->removeClientIdFromLists(client_id);
+                    it = thread_data->client_id_sock_map.erase(it);
+                    continue;
+                }
+                ++it;
+            }
+        }
+    }
+}
+
+// Thread function to handle client requests
 void* clientHandler(void* arg) {
     ThreadData* thread_data = (ThreadData*)arg;
     int client_sock = thread_data->client_sock;
@@ -179,7 +228,7 @@ void* clientHandler(void* arg) {
         } else if (request.action == "REGISTER") {
             registerClient(client_sock, request, *thread_data);
         } else if (request.action == "SHOW_ALL_CLIENTS") {
-            showEvents(client_sock, request, *thread_data);
+            showClients(client_sock, request, *thread_data);
         }
         
         memset(buffer, 0, sizeof(buffer));
@@ -187,36 +236,41 @@ void* clientHandler(void* arg) {
 }
 
 int main() {
+    // Create a server socket
     int server_sock = socket(AF_INET, SOCK_STREAM, 0);
     if (server_sock == -1) {
         perror("Error creating socket");
         return 1;
     }
 
+    // Configure server address
     sockaddr_in server_addr;
     server_addr.sin_family = AF_INET;
     server_addr.sin_addr.s_addr = INADDR_ANY;
-    server_addr.sin_port = htons(8881);
+    server_addr.sin_port = htons(port);
 
+    // Bind server socket
     if (::bind(server_sock, (struct sockaddr*)&server_addr, sizeof(server_addr)) == -1) {
         perror("Bind failed");
         return 1;
     }
 
+    // Listen for incoming connections
     if (listen(server_sock, 10) == -1) {
         perror("Listen failed");
         return 1;
     }
 
-    cout << "[MAIN] Server listening on port 8888..." << std::endl;
+    cout << "[MAIN] Server listening on port " << port << "..." << std::endl;
 
+    // Variables to store thread IDs, active clients, client ID to socket mapping, and calendar events
     vector<pthread_t> thread_ids;
     vector<int> active_clients;
     unordered_map<int, int> client_id_sock_map;
     vector<CalendarEvent> calendar;
 
     while (true) {
-        
+        // Accept a new client connection
         int client_sock = accept(server_sock, nullptr, nullptr);
         cout << "[MAIN] New client connected, sock: " << client_sock << endl;
         if (client_sock == -1) {
@@ -224,13 +278,22 @@ int main() {
             continue;
         }
 
+        // Creating a thread for the new client
         ThreadData* thread_data = new ThreadData {
             client_id_sock_map, 
             active_clients, 
             client_sock
             };
 
-        // creating client thread
+        // Creating thread to check active clients connections
+        pthread_t check_connections_thread;
+        if (pthread_create(&check_connections_thread, NULL, checkClientConnections, (void*)thread_data) != 0) {
+            perror("Failed to create check connections thread");
+            close(server_sock);
+            return 1;
+        }
+
+        // Creating client thread
         pthread_t thread_id;
         if (pthread_create(&thread_id, NULL, clientHandler, (void*)thread_data) != 0) {
             perror("Failed to create thread");
@@ -243,7 +306,7 @@ int main() {
         pthread_detach(thread_id);
     }
 
-    // waiting for all threads go down
+    // Waiting for all threads to finish
     for (pthread_t thread_id : thread_ids) {
         pthread_join(thread_id, NULL);
     }
