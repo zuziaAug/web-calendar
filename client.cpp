@@ -5,8 +5,10 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <unistd.h>
+#include <mutex>
 
 using namespace std;
+int port = 8888;
 
 struct DateTime {
     int year;
@@ -33,14 +35,18 @@ struct Request {
     int event_id;  
 };
 
+std::mutex mtx;
+
 void sendRequest(int sockfd, const Request& request) {
-    string request_str = to_string(request.client_id) + " " + request.action + " " +
-                         " " + request.event_title + " " + request.event_description + " " +
+    string request_str = to_string(request.client_id) + "" + request.action + " " +
+                         request.event_title + " " + request.event_description + " " +
                          to_string(request.start_date.year) + " " + to_string(request.start_date.month) + " " +
                          to_string(request.start_date.day) + " " + to_string(request.start_date.hour) + " " +
                          to_string(request.end_time.year) + " " + to_string(request.end_time.month) + " " +
                          to_string(request.end_time.day) + " " + to_string(request.end_time.hour) + " " +
                          to_string(request.event_id);
+
+    lock_guard<mutex> lock(mtx);
     send(sockfd, request_str.c_str(), request_str.length(), 0);
 }
 
@@ -60,8 +66,8 @@ void* receiveThread(void* arg) {
         if (bytes_received > 0) {
             buffer[bytes_received] = '\0';
             cout << "Server response: " << buffer << endl;
-            memset(buffer, 0, sizeof(buffer));
         }
+        memset(buffer, 0, sizeof(buffer));
     }
 }
 
@@ -79,7 +85,7 @@ int main(int argc, char* argv[]) {
 
     sockaddr_in server_addr;
     server_addr.sin_family = AF_INET;
-    server_addr.sin_port = htons(8881);
+    server_addr.sin_port = htons(port);
     inet_pton(AF_INET, "127.0.0.1", &(server_addr.sin_addr));
 
     if (connect(sockfd, (struct sockaddr*)&server_addr, sizeof(server_addr)) == -1) {
@@ -90,7 +96,7 @@ int main(int argc, char* argv[]) {
 
     int client_id = stoi(argv[1]);
     string action;
-    char buffer[1024] = {0};
+    //char buffer[1024] = {0};
 
     // creating thread to listen for server commands
     pthread_t receive_thread;
@@ -100,13 +106,13 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    Request request{client_id, "REGISTER"};
+    Request request{client_id, "REGISTER", "", "", DateTime{}, DateTime{},0};
     sendRequest(sockfd, request);
     sleep(1);
     while (true) {
         
         cout << "\nCHOOSE ACTION:\n" <<
-        "[1.] Add new event \n[2.] Delete event \n[3.] Show all events \n[4.] Show all clients\n";
+        "[1] Add new event \n[2] Delete event \n[3] Show all events \n[4] Show all clients\n[5] Exit\n";
         getline(cin, action);
 
         if (action == "exit") break;
@@ -173,28 +179,62 @@ int main(int argc, char* argv[]) {
         } else if (action == "3") {
             try {
                 action = "SHOW_ALL_EVENTS";
-                Request request{client_id, action};
+                Request request{client_id, action, "", "", DateTime{}, DateTime{}, -1};
                 sendRequest(sockfd, request);
+
+                // Receive and display the server's response
+                char buffer[1024] = {0};
+                ssize_t bytes_received = recv(sockfd, buffer, sizeof(buffer) - 1, 0);
+
+                if (bytes_received > 0) {
+                    buffer[bytes_received] = '\0';
+                    cout << "Server response:\n" << buffer << endl;
+                } else if (bytes_received == 0) {
+                    cout << "Server closed the connection." << endl;
+                } else {
+                    perror("Error receiving data from server");
+                }
+                
             } catch (const invalid_argument& e) {
                 cerr << "Invalid input. Please enter a valid integer." << endl;
             } catch (const out_of_range& e) {
                 cerr << "Input out of range for integer." << endl;
             }
 
-        // SHOW_ALL_CLIENTS    
+        // SHOW_ALL_CLIENTS       
         } else if (action == "4") {
             try {
                 action = "SHOW_ALL_CLIENTS";
-                Request request{client_id, action};
+                Request request{ client_id, action, "", "", DateTime{}, DateTime{}, -1 };
                 sendRequest(sockfd, request);
+
+                // Receive and display the server's response
+                char buffer[1024] = { 0 };
+                ssize_t bytes_received = recv(sockfd, buffer, sizeof(buffer) - 1, 0);
+
+                if (bytes_received > 0) {
+                    buffer[bytes_received] = '\0';
+                    cout << "Server response:\n" << buffer << endl;
+                }
+                else if (bytes_received == 0) {
+                    cout << "Server closed the connection." << endl;
+                }
+                else {
+                    perror("Error receiving data from server");
+                }
             } catch (const invalid_argument& e) {
                 cerr << "Invalid input. Please enter a valid integer." << endl;
             } catch (const out_of_range& e) {
                 cerr << "Input out of range for integer." << endl;
             }
+
+        } else if (action == "5") {
+            cout << "Disconnecting from server.\n" << endl;
+            break;
+        }
         sleep(1);
     }
 
     close(sockfd);
     return 0;
-}}
+}
