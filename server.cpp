@@ -48,10 +48,10 @@ struct ThreadData {
     std::unordered_map<int, int>& client_id_sock_map;
     std::vector<int>& active_clients;
     int client_sock;
-    std::vector<CalendarEvent> calendar;
+    std::vector<CalendarEvent>& calendar;
 
-    ThreadData(std::unordered_map<int, int>& client_map, std::vector<int>& all_clients, int sock)
-        : client_id_sock_map(client_map), active_clients(all_clients), client_sock(sock) {}
+    ThreadData(std::unordered_map<int, int>& client_map, std::vector<int>& all_clients, int sock, std::vector<CalendarEvent>& cal)
+        : client_id_sock_map(client_map), active_clients(all_clients), client_sock(sock), calendar(cal) {}
 
     // Function to remove from active clients 
     void removeClientIdFromLists(int client_id) {
@@ -100,19 +100,32 @@ void addEvent(int client_sock, const Request& request, ThreadData& thread_data) 
 void deleteEvent(int client_sock, const Request& request, ThreadData& thread_data) {
     string response_message;
     
+    int id_to_delete = request.event_id;
     lock_guard<mutex> lock(thread_data.data_mutex);
     
-    // Find the event by ID
-    auto it = find_if(thread_data.calendar.begin(), thread_data.calendar.end(),
-                      [request](const CalendarEvent& event) { return event.event_id == request.event_id; });
-    
-    if (it != thread_data.calendar.end()) {
-        // Event found, erase it from the calendar
-        thread_data.calendar.erase(it);
-        response_message = "Event deleted successfully!";
-    } else {
-        response_message = "Event not found!";
+    // // Find the event by ID
+    // auto it = find_if(thread_data.calendar.begin(), thread_data.calendar.end(),
+    //                   [request](const CalendarEvent& event) { return event.event_id == request.event_id; });
+
+    auto it = thread_data.calendar.begin();
+    while(it != thread_data.calendar.end()) {
+        cout << "event_id: " << it->event_id;
+        if(it->event_id == id_to_delete) {
+            thread_data.calendar.erase(it);
+            response_message = "Event deleted successfully!";
+            send(client_sock, response_message.c_str(), response_message.length(), 0);
+            break;
+        }
+        ++it;
     }
+    
+    // if (it != thread_data.calendar.end()) {
+    //     // Event found, erase it from the calendar
+    //     thread_data.calendar.erase(it);
+    //     response_message = "Event deleted successfully!";
+    // } else {
+    response_message = "Event not found!";
+    //}
 
     send(client_sock, response_message.c_str(), response_message.length(), 0);
 }
@@ -282,7 +295,8 @@ int main() {
         ThreadData* thread_data = new ThreadData {
             client_id_sock_map, 
             active_clients, 
-            client_sock
+            client_sock,
+            calendar
             };
 
         // Creating thread to check active clients connections
