@@ -135,28 +135,28 @@ int main(int argc, char* argv[]) {
             cout << "Enter end date (YYYY MM DD HH): ";
             cin >> end_year_str >> end_month_str >> end_day_str >> end_hour_str;
 
-            try {
-                action = "ADD_EVENT";
-                DateTime start_date{stoi(start_year_str), stoi(start_month_str), stoi(start_day_str), stoi(start_hour_str)};
-                DateTime end_date{stoi(end_year_str), stoi(end_month_str), stoi(end_day_str), stoi(end_hour_str)};
-                Request request{client_id, action, new_event_title, new_event_description, start_date, end_date, -1};
+            //try {
+            action = "ADD_EVENT";
+            DateTime start_date{stoi(start_year_str), stoi(start_month_str), stoi(start_day_str), stoi(start_hour_str)};
+            DateTime end_date{stoi(end_year_str), stoi(end_month_str), stoi(end_day_str), stoi(end_hour_str)};                
+            Request request{client_id, action, new_event_title, new_event_description, start_date, end_date, -1};
                 
-                // Send the ADD_EVENT request to the server
-                sendRequest(sockfd, request);
+            // Send the ADD_EVENT request to the server
+            sendRequest(sockfd, request);
 
                 // Receive the server's response
-                char buffer[1024] = {0};
-                ssize_t bytes_received = recv(sockfd, buffer, sizeof(buffer) - 1, 0);
+            //     char buffer[1024] = {0};
+            //     ssize_t bytes_received = recv(sockfd, buffer, sizeof(buffer) - 1, 0);
                 
-                if (bytes_received > 0) {
-                    buffer[bytes_received] = '\0';
-                    cout << "Server response: " << buffer << endl;
-                }
-            } catch (const invalid_argument& e) {
-                cerr << "Invalid input. Please enter valid integers for date and time." << endl;
-            } catch (const out_of_range& e) {
-                cerr << "Input out of range for date and time." << endl;
-            }
+            //     if (bytes_received > 0) {
+            //         buffer[bytes_received] = '\0';
+            //         cout << "Server response: " << buffer << endl;
+            //     }
+            // } catch (const invalid_argument& e) {
+            //     cerr << "Invalid input. Please enter valid integers for date and time." << endl;
+            // } catch (const out_of_range& e) {
+            //     cerr << "Input out of range for date and time." << endl;
+            // }
 
         // DELETE_EVENT
         } else if (action == "2") {
@@ -177,56 +177,50 @@ int main(int argc, char* argv[]) {
 
         // SHOW_ALL_EVENTS
         } else if (action == "3") {
-            try {
-                action = "SHOW_ALL_EVENTS";
-                Request request{client_id, action, "", "", DateTime{}, DateTime{}, -1};
-                sendRequest(sockfd, request);
+            // try {
+            action = "SHOW_ALL_EVENTS";
+            Request request{client_id, action, "", "", DateTime{}, DateTime{}, -1};
+            sendRequest(sockfd, request);
 
-                // Receive and display the server's response
-                char buffer[1024] = {0};
-                ssize_t bytes_received = recv(sockfd, buffer, sizeof(buffer) - 1, 0);
+            //     // Receive and display the server's response
+            //     char buffer[1024] = {0};
+            //     ssize_t bytes_received = recv(sockfd, buffer, sizeof(buffer) - 1, 0);
 
-                if (bytes_received > 0) {
-                    buffer[bytes_received] = '\0';
-                    cout << "Server response:\n" << buffer << endl;
-                } else if (bytes_received == 0) {
-                    cout << "Server closed the connection." << endl;
-                } else {
-                    perror("Error receiving data from server");
-                }
+            //     if (bytes_received > 0) {
+            //         buffer[bytes_received] = '\0';
+            //         cout << "Server response:\n" << buffer << endl;
+            //     } else if (bytes_received == 0) {
+            //         cout << "Server closed the connection." << endl;
+            //     } else {
+            //         perror("Error receiving data from server");
+            //     }
                 
-            } catch (const invalid_argument& e) {
-                cerr << "Invalid input. Please enter a valid integer." << endl;
-            } catch (const out_of_range& e) {
-                cerr << "Input out of range for integer." << endl;
-            }
+            // } catch (const invalid_argument& e) {
+            //     cerr << "Invalid input. Please enter a valid integer." << endl;
+            // } catch (const out_of_range& e) {
+            //     cerr << "Input out of range for integer." << endl;
+            // }
 
         // SHOW_ALL_CLIENTS       
         } else if (action == "4") {
-            try {
-                action = "SHOW_ALL_CLIENTS";
-                Request request{ client_id, action, "", "", DateTime{}, DateTime{}, -1 };
-                sendRequest(sockfd, request);
+            action = "SHOW_ALL_CLIENTS";
+            Request request{ client_id, action, "", "", DateTime{}, DateTime{}, -1 };
+            sendRequest(sockfd, request);
 
-                // Receive and display the server's response
-                char buffer[1024] = { 0 };
-                ssize_t bytes_received = recv(sockfd, buffer, sizeof(buffer) - 1, 0);
+            // // Receive and display the server's response
+            // char buffer[1024] = { 0 };
+            // ssize_t bytes_received = recv(sockfd, buffer, sizeof(buffer) - 1, 0);
 
-                if (bytes_received > 0) {
-                    buffer[bytes_received] = '\0';
-                    cout << "Server response:\n" << buffer << endl;
-                }
-                else if (bytes_received == 0) {
-                    cout << "Server closed the connection." << endl;
-                }
-                else {
-                    perror("Error receiving data from server");
-                }
-            } catch (const invalid_argument& e) {
-                cerr << "Invalid input. Please enter a valid integer." << endl;
-            } catch (const out_of_range& e) {
-                cerr << "Input out of range for integer." << endl;
-            }
+            // if (bytes_received > 0) {
+            //     buffer[bytes_received] = '\0';
+            //     cout << "Server response:\n" << buffer << endl;
+            // }
+            // else if (bytes_received == 0) {
+            //     cout << "Server closed the connection." << endl;
+            // }
+            // else {
+            //     perror("Error receiving data from server");
+            // }
 
         } else if (action == "5") {
             cout << "Disconnecting from server.\n" << endl;
