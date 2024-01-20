@@ -30,8 +30,10 @@ private slots:
 private:
     QLabel *hostLabel;
     QLabel *portLabel;
+    QLabel *clientIdLabel;
     QLineEdit *hostLineEdit;
     QLineEdit *portLineEdit;
+    QLineEdit *clientIdLineEdit;
     QLabel *statusLabel;
     QPushButton *getEventButton;
     QPushButton *quitButton;

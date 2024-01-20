@@ -10,6 +10,7 @@ MainWindow::MainWindow(QWidget *parent)
 {
     hostLabel = new QLabel(tr("&Server name:"));
     portLabel = new QLabel(tr("S&erver port:"));
+    clientIdLabel = new QLabel(tr("&Client id:"));
 
     // find out which IP to connect to
     QString ipAddress;
@@ -28,16 +29,17 @@ MainWindow::MainWindow(QWidget *parent)
     hostLineEdit = new QLineEdit(ipAddress);
     portLineEdit = new QLineEdit;
     portLineEdit->setValidator(new QIntValidator(1, 65535, this));
-
+    clientIdLineEdit = new QLineEdit;
+    clientIdLineEdit->setValidator(new QIntValidator(1, 65535, this));
 
     hostLabel->setBuddy(hostLineEdit);
     portLabel->setBuddy(portLineEdit);
+    clientIdLabel->setBuddy(clientIdLineEdit);
 
-    statusLabel = new QLabel(tr("This examples requires that you run the "
-                                "Fortune Server example as well."));
+    statusLabel = new QLabel(tr("Waiting for connection..."));
     statusLabel->setWordWrap(true);
 
-    getEventButton = new QPushButton(tr("Get Fortune"));
+    getEventButton = new QPushButton(tr("Connect"));
     getEventButton->setDefault(true);
     getEventButton->setEnabled(false);
 
@@ -68,11 +70,13 @@ MainWindow::MainWindow(QWidget *parent)
     mainLayout->addWidget(hostLineEdit, 0, 1);
     mainLayout->addWidget(portLabel, 1, 0);
     mainLayout->addWidget(portLineEdit, 1, 1);
-    mainLayout->addWidget(statusLabel, 2, 0, 1, 2);
-    mainLayout->addWidget(buttonBox, 3, 0, 1, 2);
+    mainLayout->addWidget(clientIdLabel, 2, 0);
+    mainLayout->addWidget(clientIdLineEdit, 2, 1);
+    mainLayout->addWidget(statusLabel, 3, 0, 1, 2);
+    mainLayout->addWidget(buttonBox, 4, 0, 1, 2);
     setLayout(mainLayout);
 
-    setWindowTitle(tr("Blocking Fortune Client"));
+    setWindowTitle(tr("Web Calendar Client"));
     portLineEdit->setFocus();
 }
 
@@ -81,8 +85,9 @@ MainWindow::~MainWindow() {}
 void MainWindow::requestNewEvent()
 {
     getEventButton->setEnabled(false);
-    thread.requestNewEvent(hostLineEdit->text(),
-                             portLineEdit->text().toInt());
+    thread.connectClient(hostLineEdit->text(),
+                             portLineEdit->text().toInt(),
+                         clientIdLineEdit->text().toInt());
 }
 //! [1]
 
@@ -106,19 +111,19 @@ void MainWindow::displayError(int socketError, const QString &message)
 {
     switch (socketError) {
     case QAbstractSocket::HostNotFoundError:
-        QMessageBox::information(this, tr("Blocking Fortune Client"),
+        QMessageBox::information(this, tr("Web Calendar Client"),
                                  tr("The host was not found. Please check the "
                                     "host and port settings."));
         break;
     case QAbstractSocket::ConnectionRefusedError:
-        QMessageBox::information(this, tr("Blocking Fortune Client"),
+        QMessageBox::information(this, tr("Web Calendar Client"),
                                  tr("The connection was refused by the peer. "
                                     "Make sure the fortune server is running, "
                                     "and check that the host name and port "
                                     "settings are correct."));
         break;
     default:
-        QMessageBox::information(this, tr("Blocking Fortune Client"),
+        QMessageBox::information(this, tr("Web Calendar Client"),
                                  tr("The following error occurred: %1.")
                                      .arg(message));
     }
