@@ -3,8 +3,6 @@
 
 #include "mainwindow.h"
 
-
-
 MainWindow::MainWindow(QWidget *parent)
     : QWidget(parent)
 {
@@ -26,10 +24,11 @@ MainWindow::MainWindow(QWidget *parent)
     if (ipAddress.isEmpty())
         ipAddress = QHostAddress(QHostAddress::LocalHost).toString();
 
+    //Connection group
     hostLineEdit = new QLineEdit(ipAddress);
-    portLineEdit = new QLineEdit;
+    portLineEdit = new QLineEdit("8888");
     portLineEdit->setValidator(new QIntValidator(1, 65535, this));
-    clientIdLineEdit = new QLineEdit;
+    clientIdLineEdit = new QLineEdit("1");
     clientIdLineEdit->setValidator(new QIntValidator(1, 65535, this));
 
     hostLabel->setBuddy(hostLineEdit);
@@ -41,7 +40,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     getEventButton = new QPushButton(tr("Connect"));
     getEventButton->setDefault(true);
-    getEventButton->setEnabled(false);
+    getEventButton->setEnabled(true);
 
     quitButton = new QPushButton(tr("Quit"));
 
@@ -59,21 +58,72 @@ MainWindow::MainWindow(QWidget *parent)
     connect(portLineEdit, &QLineEdit::textChanged,
             this, &MainWindow::enableGetEventButton);
     //! [0]
-    connect(&thread, &ClientThread::newEvent,
-            this, &MainWindow::showEvent);
-    connect(&thread, &ClientThread::error,
+    connect(&senderThread, &SenderThread::newEvent,
+            this, &MainWindow::displayResponse);
+    connect(&receiverThread, &ReceiverThread::newEvent,
+            this,&MainWindow::displayResponse);
+    connect(&senderThread, &SenderThread::error,
             this, &MainWindow::displayError);
+    connect(&senderThread, &SenderThread::newSockfd,
+                &receiverThread, &ReceiverThread::setSockfd);
     //! [0]
 
+    QGridLayout *gridLayout = new QGridLayout;
+    gridLayout->addWidget(hostLabel, 0, 0);
+    gridLayout->addWidget(hostLineEdit, 0, 1);
+    gridLayout->addWidget(portLabel, 1, 0);
+    gridLayout->addWidget(portLineEdit, 1, 1);
+    gridLayout->addWidget(clientIdLabel, 2, 0);
+    gridLayout->addWidget(clientIdLineEdit, 2, 1);
+    gridLayout->addWidget(statusLabel, 3, 0, 1, 2);
+    gridLayout->addWidget(buttonBox, 4, 0, 1, 2);
+    QGroupBox *connectionGroup = new QGroupBox("Connection");
+    connectionGroup->setLayout(gridLayout);
+
+    //Add Event group
+    titleLabel = new QLabel("Title:");
+    descriptionLabel = new QLabel("Description:");
+
+    titleEdit = new QLineEdit();
+    descriptionEdit = new QLineEdit();
+
+    titleLabel->setBuddy(titleEdit);
+    descriptionLabel->setBuddy(descriptionEdit);
+
+    startTimeLabel = new QLabel;
+    endTimeLabel = new QLabel;
+    startTimeEdit = new QDateTimeEdit(QDateTime::currentDateTime());
+    endTimeEdit = new QDateTimeEdit(QDateTime::currentDateTime().addSecs(3600));
+
+    addEventButton = new QPushButton(tr("Add Event"));
+    connect(addEventButton, &QPushButton::clicked,
+            this, &MainWindow::addEvent);
+
+    showAllEventsButton = new QPushButton(tr("Show All Events"));
+    connect(showAllEventsButton, &QPushButton::clicked,
+            this, &MainWindow::showEvents);
+
+    vBoxLayout = new QVBoxLayout();
+
+    //Add event group
+    vBoxLayout->addLayout(gridLayout);
+    vBoxLayout->addWidget(titleLabel);
+    vBoxLayout->addWidget(titleEdit);
+    vBoxLayout->addWidget(descriptionLabel);
+    vBoxLayout->addWidget(descriptionEdit);
+    vBoxLayout->addWidget(startTimeLabel);
+    vBoxLayout->addWidget(startTimeEdit);
+    vBoxLayout->addWidget(endTimeLabel);
+    vBoxLayout->addWidget(endTimeEdit);
+    vBoxLayout->addWidget(addEventButton);
+    vBoxLayout->addWidget(showAllEventsButton);
+    QGroupBox *addEventGroup = new QGroupBox("Add New Event");
+    addEventGroup->setLayout(vBoxLayout);
+
     QGridLayout *mainLayout = new QGridLayout;
-    mainLayout->addWidget(hostLabel, 0, 0);
-    mainLayout->addWidget(hostLineEdit, 0, 1);
-    mainLayout->addWidget(portLabel, 1, 0);
-    mainLayout->addWidget(portLineEdit, 1, 1);
-    mainLayout->addWidget(clientIdLabel, 2, 0);
-    mainLayout->addWidget(clientIdLineEdit, 2, 1);
-    mainLayout->addWidget(statusLabel, 3, 0, 1, 2);
-    mainLayout->addWidget(buttonBox, 4, 0, 1, 2);
+    mainLayout->addWidget(connectionGroup,0,0);
+    mainLayout->addWidget(addEventGroup,1,0);
+
     setLayout(mainLayout);
 
     setWindowTitle(tr("Web Calendar Client"));
@@ -82,30 +132,85 @@ MainWindow::MainWindow(QWidget *parent)
 
 MainWindow::~MainWindow() {}
 
+
 void MainWindow::requestNewEvent()
 {
     getEventButton->setEnabled(false);
-    thread.connectClient(hostLineEdit->text(),
+    senderThread.connectClient(hostLineEdit->text(),
                              portLineEdit->text().toInt(),
                          clientIdLineEdit->text().toInt());
+    receiverThread.start();
+
 }
 //! [1]
+void MainWindow::addEvent()
+{
+    addEventButton->setEnabled(false);
+
+    QDateTime startTime = startTimeEdit->dateTime();
+    QDateTime endTime = endTimeEdit->dateTime();
+
+    DateTime start{startTime.date().year(),startTime.date().month(),startTime.date().day(),startTime.time().hour()};
+    DateTime end{endTime.date().year(),endTime.date().month(),endTime.date().day(),endTime.time().hour()};
+
+    Request request{
+        this->clientIdLineEdit->text().toInt(),
+        "ADD_EVENT",
+        descriptionEdit->text().toStdString(),
+        titleEdit->text().toStdString(),
+        start,
+        end,
+        -1
+    };
+    senderThread.sendRequest(request);
+    addEventButton->setEnabled(true);
+
+}
+
+/*
+                // DELETE_EVENT
+                string event_id_to_delete;
+                qDebug() << "Enter event ID to delete: ";
+                getline(cin, event_id_to_delete);
+
+                try {
+                    action = "DELETE_EVENT";
+                    int event_id = stoi(event_id_to_delete);
+                    Request request{client_id, action, "", "", DateTime{}, DateTime{}, event_id};
+                    sendRequest(request);
+                } catch (const invalid_argument& e) {
+                    qDebug() << "Invalid input. Please enter a valid integer.";
+                } catch (const out_of_range& e) {
+                    qDebug() << "Input out of range for integer.";
+                }
+*/
+
+
+/*
+                action = "SHOW_ALL_CLIENTS";
+                Request request{ client_id, action, "", "", DateTime{}, DateTime{}, -1 };
+                sendRequest(request);
+ */
 
 //! [2]
-void MainWindow::showEvent(const QString &nextEvent)
+void MainWindow::showEvents()
 {
-    if (nextEvent == currentEvent) {
-        requestNewEvent();
-        return;
-    }
-    //! [2]
+    showAllEventsButton->setEnabled(false);
 
-    //! [3]
-    currentEvent = nextEvent;
-    statusLabel->setText(currentEvent);
-    getEventButton->setEnabled(true);
+    Request request{
+        this->clientIdLineEdit->text().toInt(),
+        "SHOW_ALL_EVENTS", "", "", DateTime{}, DateTime{}, -1};
+
+    senderThread.sendRequest(request);
+
+    showAllEventsButton->setEnabled(true);
 }
-//! [3]
+
+void MainWindow::displayResponse(const QString &nextEvent)
+{
+        statusLabel->setText(nextEvent);
+        getEventButton->setEnabled(true);
+}
 
 void MainWindow::displayError(int socketError, const QString &message)
 {

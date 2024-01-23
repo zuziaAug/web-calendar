@@ -1,15 +1,12 @@
-#ifndef CLIENTTHREAD_H
-#define CLIENTTHREAD_H
+#ifndef SENDERTHREAD_H
+#define SENDERTHREAD_H
 
 #include <QThread>
 #include <QMutex>
 #include <QWaitCondition>
-#include <iostream>
-#include <cstring>
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <unistd.h>
-#include <mutex>
 
 struct DateTime {
     int year;
@@ -36,32 +33,32 @@ struct Request {
     int event_id;
 };
 
-class ClientThread : public QThread
+class SenderThread : public QThread
 {
     Q_OBJECT
 public:
-    ClientThread(QObject *parent = nullptr);
-    ~ClientThread();
+    SenderThread(QObject *parent = nullptr);
+    ~SenderThread();
 
     void connectClient(const QString &hostName, quint16 port, quint16 clientId);
     void run() override;
-    void sendRequest(int sockfd, const Request& request);
-    void* receiveThread(void* arg);
+    void sendRequest(const Request& request);
 
 signals:
     void newEvent(const QString &event);
+    void newSockfd(int sockfd);
     void error(int socketError, const QString &message);
 
 private:
+    void* receiveThread(void* arg);
+
     QString hostName;
     quint16 port;
     quint16 clientId;
-    std::mutex mtx;
+    int sockfd;
     QMutex mutex;
     QWaitCondition cond;
     bool quit;
 };
 
-
-
-#endif // CLIENTTHREAD_H
+#endif // SENDERTHREAD_H

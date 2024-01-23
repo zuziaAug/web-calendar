@@ -3,7 +3,8 @@
 
 #include <QWidget>
 
-#include "clientthread.h"
+#include "senderthread.h"
+#include "receiverthread.h"
 
 QT_BEGIN_NAMESPACE
 class QDialogButtonBox;
@@ -11,6 +12,9 @@ class QLabel;
 class QLineEdit;
 class QPushButton;
 class QAction;
+class QGroupBox;
+class QVBoxLayout;
+class QDateTimeEdit;
 QT_END_NAMESPACE
 
 class MainWindow : public QWidget
@@ -23,9 +27,12 @@ public:
 
 private slots:
     void requestNewEvent();
-    void showEvent(const QString &event);
+    void showEvents();
+    void displayResponse(const QString &event);
     void displayError(int socketError, const QString &message);
     void enableGetEventButton();
+    void addEvent();
+
 
 private:
     QLabel *hostLabel;
@@ -39,7 +46,23 @@ private:
     QPushButton *quitButton;
     QDialogButtonBox *buttonBox;
 
-    ClientThread thread;
+    QVBoxLayout *vBoxLayout;
+    QLabel *titleLabel;
+    QLabel *descriptionLabel;
+    QLabel *startTimeLabel;
+    QLabel *endTimeLabel;
+    QLineEdit *titleEdit;
+    QLineEdit *descriptionEdit;
+    QDateTimeEdit *startTimeEdit;
+    QDateTimeEdit *endTimeEdit;
+
+    QPushButton *addEventButton;
+    QPushButton *removeEventButton;
+    QPushButton *showAllEventsButton;
+    QPushButton *showAllClientsButton;
+
+    SenderThread senderThread;
+    ReceiverThread receiverThread;
     QString currentEvent;
 };
 #endif // MAINWINDOW_H
