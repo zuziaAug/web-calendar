@@ -23,7 +23,6 @@ MainWindow::MainWindow(QWidget *parent)
     // if we did not find one, use IPv4 localhost
     if (ipAddress.isEmpty())
         ipAddress = QHostAddress(QHostAddress::LocalHost).toString();
-
     //Connection group
     hostLineEdit = new QLineEdit(ipAddress);
     portLineEdit = new QLineEdit("8888");
@@ -64,8 +63,6 @@ MainWindow::MainWindow(QWidget *parent)
             this,&MainWindow::displayResponse);
     connect(&senderThread, &SenderThread::error,
             this, &MainWindow::displayError);
-    connect(&senderThread, &SenderThread::newSockfd,
-                &receiverThread, &ReceiverThread::setSockfd);
     //! [0]
 
     QGridLayout *gridLayout = new QGridLayout;

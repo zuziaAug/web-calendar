@@ -21,24 +21,13 @@ void SenderThread::connectClient(const QString &hostName, quint16 port, quint16 
 {
 
     QMutexLocker locker(&mutex);
-    using namespace std;
-    this->clientId = clientId;
-    this->sockfd = socket(AF_INET, SOCK_STREAM, 0);
-    if (this->sockfd == -1) {
-        emit error(1, "Error creating socket");
+    this->clientId = clientId;    
+    socket.connectToHost(hostName, port);
+    if (!socket.waitForConnected(1000)) {
+        emit error(socket.error(), socket.errorString());
+        return;
     }
-
-    emit newSockfd(this->sockfd);
-
-    sockaddr_in server_addr;
-    server_addr.sin_family = AF_INET;
-    server_addr.sin_port = htons(port);
-    inet_pton(AF_INET, hostName.toUtf8(), &(server_addr.sin_addr));
-
-    if (::connect(this->sockfd, (struct sockaddr*)&server_addr, sizeof(server_addr)) == -1) {
-        emit error(1, "Connection failed");
-        close(this->sockfd);
-    }
+    emit sendSocket(&socket);
 
     Request request{this->clientId, "REGISTER", "", "", DateTime{}, DateTime{},0};
     sendRequest(request);
@@ -52,42 +41,6 @@ void SenderThread::connectClient(const QString &hostName, quint16 port, quint16 
 
 void SenderThread::run()
 {
-        /*
-        // QTcpSocket socket;
-        socket.connectToHost(serverName, serverPort);
-        //! [6] //! [8]
-
-        if (!socket.waitForConnected(Timeout)) {
-            emit error(socket.error(), socket.errorString());
-            return;
-        }
-        //! [8] //! [11]
-
-        QDataStream in(&socket);
-        in.setVersion(QDataStream::Qt_6_5);
-        QString event;
-        //! [11] //! [12]
-
-        do {
-            if (!socket.waitForReadyRead(Timeout)) {
-                emit error(socket.error(), socket.errorString());
-                return;
-            }
-
-            in.startTransaction();
-            in >> event;
-        } while (!in.commitTransaction());
-        //! [12] //! [15]
-
-        mutex.lock();
-        emit newEvent(event);
-        //! [7]
-
-        cond.wait(&mutex);
-        serverName = hostName;
-        serverPort = port;
-        mutex.unlock();
-        */
 
  }
 
@@ -101,5 +54,11 @@ void SenderThread::sendRequest(const Request& request) {
                          to_string(request.end_time.day) + " " + to_string(request.end_time.hour) + " " +
                          to_string(request.event_id);
 
-    send(this->sockfd, request_str.c_str(), request_str.length(), 0);
+    QByteArray block;
+    QDataStream out(&block, QIODevice::WriteOnly);
+    out.setVersion(QDataStream::Qt_6_5);
+    out << QString().fromStdString(request_str);
+    mutex.lock();
+    socket.write(block);
+    mutex.unlock();
 }

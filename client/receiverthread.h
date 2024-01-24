@@ -2,9 +2,8 @@
 #define RECEIVERTHREAD_H
 
 #include <QThread>
-
-#include <sys/socket.h>
-#include <arpa/inet.h>
+#include <QMutex>
+#include <QTcpSocket>
 
 class ReceiverThread : public QThread
 {
@@ -20,12 +19,12 @@ signals:
     void error(int socketError, const QString &message);
 
 public slots:
-    void setSockfd(int sockfd);
+    void setSocket(QTcpSocket *socket);
 
 private:
-    char buffer[1024] = {0};
-    ssize_t bytes_received;
-    int sockfd;
+    QTcpSocket *socket;
+    QMutex mutex;
+
 };
 
 #endif // RECEIVERTHREAD_H

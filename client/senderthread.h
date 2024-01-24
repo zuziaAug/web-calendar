@@ -4,9 +4,7 @@
 #include <QThread>
 #include <QMutex>
 #include <QWaitCondition>
-#include <sys/socket.h>
-#include <arpa/inet.h>
-#include <unistd.h>
+#include <QTcpSocket>
 
 struct DateTime {
     int year;
@@ -46,8 +44,8 @@ public:
 
 signals:
     void newEvent(const QString &event);
-    void newSockfd(int sockfd);
     void error(int socketError, const QString &message);
+    void sendSocket(QTcpSocket *socket);
 
 private:
     void* receiveThread(void* arg);
@@ -55,9 +53,9 @@ private:
     QString hostName;
     quint16 port;
     quint16 clientId;
-    int sockfd;
     QMutex mutex;
     QWaitCondition cond;
+    QTcpSocket socket;
     bool quit;
 };
 
