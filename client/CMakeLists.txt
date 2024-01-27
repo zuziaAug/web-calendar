@@ -26,7 +26,7 @@ set(SERVER_SOURCES ../server.cpp)
 qt_add_executable(server ${SERVER_SOURCES})
 
 set(CLI_CLIENT_SOURCES ../client.cpp)
-    qt_add_executable(client_cli ${CLI_CLIENT_SOURCES})
+qt_add_executable(client_cli ${CLI_CLIENT_SOURCES})
 
 target_link_libraries(client_gui PRIVATE
     Qt6::Core
@@ -36,12 +36,6 @@ target_link_libraries(client_gui PRIVATE
 )
 
 install(TARGETS client_gui
-    BUNDLE DESTINATION .
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-)
-
-install(TARGETS server
     BUNDLE DESTINATION .
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}

@@ -38,18 +38,18 @@ MainWindow::MainWindow(QWidget *parent)
     statusLabel = new QLabel(tr("Waiting for connection..."));
     statusLabel->setWordWrap(true);
 
-    getEventButton = new QPushButton(tr("Connect"));
-    getEventButton->setDefault(true);
-    getEventButton->setEnabled(true);
+    connectButton = new QPushButton(tr("Connect"));
+    connectButton->setDefault(true);
+    connectButton->setEnabled(true);
 
     quitButton = new QPushButton(tr("Quit"));
 
     buttonBox = new QDialogButtonBox;
-    buttonBox->addButton(getEventButton, QDialogButtonBox::ActionRole);
+    buttonBox->addButton(connectButton, QDialogButtonBox::ActionRole);
     buttonBox->addButton(quitButton, QDialogButtonBox::RejectRole);
 
-    connect(getEventButton, &QPushButton::clicked,
-            this, &MainWindow::requestNewEvent);
+    connect(connectButton, &QPushButton::clicked,
+            this, &MainWindow::connectClient);
     connect(quitButton, &QPushButton::clicked,
             this, &MainWindow::close);
 
@@ -57,9 +57,6 @@ MainWindow::MainWindow(QWidget *parent)
             this, &MainWindow::enableGetEventButton);
     connect(portLineEdit, &QLineEdit::textChanged,
             this, &MainWindow::enableGetEventButton);
-    //! [0]
-    connect(&senderThread, &SenderThread::newEvent,
-            this, &MainWindow::displayResponse);
     connect(&receiverThread, &ReceiverThread::newEvent,
             this,&MainWindow::displayResponse);
     connect(&senderThread, &SenderThread::error,
@@ -133,9 +130,9 @@ MainWindow::MainWindow(QWidget *parent)
 MainWindow::~MainWindow() {}
 
 
-void MainWindow::requestNewEvent()
+void MainWindow::connectClient()
 {
-    getEventButton->setEnabled(false);
+    connectButton->setEnabled(false);
     senderThread.connectClient(hostLineEdit->text(),
                              portLineEdit->text().toInt(),
                          clientIdLineEdit->text().toInt());
@@ -209,7 +206,7 @@ void MainWindow::showEvents()
 void MainWindow::displayResponse(const QString &nextEvent)
 {
         statusLabel->setText(nextEvent);
-        getEventButton->setEnabled(true);
+    connectButton->setEnabled(true);
 }
 
 void MainWindow::displayError(int socketError, const QString &message)
@@ -233,12 +230,12 @@ void MainWindow::displayError(int socketError, const QString &message)
                                      .arg(message));
     }
 
-    getEventButton->setEnabled(true);
+    connectButton->setEnabled(true);
 }
 
 void MainWindow::enableGetEventButton()
 {
     bool enable(!hostLineEdit->text().isEmpty() && !portLineEdit->text().isEmpty());
-    getEventButton->setEnabled(enable);
+    connectButton->setEnabled(enable);
 }
 
