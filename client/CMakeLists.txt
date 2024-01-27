@@ -16,7 +16,6 @@ qt_add_executable(client_gui
     receiverthread.h receiverthread.cpp
 )
 
-
 set_target_properties(client_gui PROPERTIES
     WIN32_EXECUTABLE TRUE
     MACOSX_BUNDLE TRUE
@@ -24,9 +23,6 @@ set_target_properties(client_gui PROPERTIES
 
 set(SERVER_SOURCES ../server.cpp)
 qt_add_executable(server ${SERVER_SOURCES})
-
-set(CLI_CLIENT_SOURCES ../client.cpp)
-qt_add_executable(client_cli ${CLI_CLIENT_SOURCES})
 
 target_link_libraries(client_gui PRIVATE
     Qt6::Core
