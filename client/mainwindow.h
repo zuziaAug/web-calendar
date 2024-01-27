@@ -26,7 +26,7 @@ public:
     ~MainWindow();
 
 private slots:
-    void requestNewEvent();
+    void connectClient();
     void showEvents();
     void displayResponse(const QString &event);
     void displayError(int socketError, const QString &message);
@@ -42,7 +42,7 @@ private:
     QLineEdit *portLineEdit;
     QLineEdit *clientIdLineEdit;
     QLabel *statusLabel;
-    QPushButton *getEventButton;
+    QPushButton *connectButton;
     QPushButton *quitButton;
     QDialogButtonBox *buttonBox;
 

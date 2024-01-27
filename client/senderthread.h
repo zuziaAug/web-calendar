@@ -58,7 +58,6 @@ private:
     int sockfd;
     QMutex mutex;
     QWaitCondition cond;
-    bool quit;
 };
 
 #endif // SENDERTHREAD_H

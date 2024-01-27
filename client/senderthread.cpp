@@ -3,18 +3,14 @@
 #include "senderthread.h"
 
 SenderThread::SenderThread(QObject *parent)
-    : QThread(parent), quit(false)
+    : QThread(parent)
 {
 
 }
 
 SenderThread::~SenderThread()
 {
-    mutex.lock();
-    quit = true;
-    cond.wakeOne();
-    mutex.unlock();
-    wait();
+
 }
 
 void SenderThread::connectClient(const QString &hostName, quint16 port, quint16 clientId)
@@ -52,44 +48,8 @@ void SenderThread::connectClient(const QString &hostName, quint16 port, quint16 
 
 void SenderThread::run()
 {
-        /*
-        // QTcpSocket socket;
-        socket.connectToHost(serverName, serverPort);
-        //! [6] //! [8]
 
-        if (!socket.waitForConnected(Timeout)) {
-            emit error(socket.error(), socket.errorString());
-            return;
-        }
-        //! [8] //! [11]
-
-        QDataStream in(&socket);
-        in.setVersion(QDataStream::Qt_6_5);
-        QString event;
-        //! [11] //! [12]
-
-        do {
-            if (!socket.waitForReadyRead(Timeout)) {
-                emit error(socket.error(), socket.errorString());
-                return;
-            }
-
-            in.startTransaction();
-            in >> event;
-        } while (!in.commitTransaction());
-        //! [12] //! [15]
-
-        mutex.lock();
-        emit newEvent(event);
-        //! [7]
-
-        cond.wait(&mutex);
-        serverName = hostName;
-        serverPort = port;
-        mutex.unlock();
-        */
-
- }
+}
 
 void SenderThread::sendRequest(const Request& request) {
     using namespace std;
