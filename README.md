@@ -1,5 +1,5 @@
 ### Temat zadania
-System współdzielonego kalendarza sieciowego, który umożliwia klientom zarządzanie eventami we wspólnym kalendarzu przechowywanym na serwerze.
+System współdzielonego kalendarza sieciowego, który umożliwia klientom zarządzanie wydarzeniami we wspólnym kalendarzu przechowywanym na serwerze.
 
 ### Komunikacja
 Klienci komunikują się z serwerem przy pomocy protokołu TCP. Klient łączy się z serwerem, a następnie może wybrać jedną z dostępnych akcji.
@@ -13,7 +13,7 @@ Plik zawiera funkcje umożliwiające dodanie wydarzenia do kalendarza, usunięci
 **mainwindow.cpp:**
 Plik zawiera funkcje do otrzymywania wątku oraz tworzenia requesta, a także cały szkielet GUI, który pozwala na wybieranie odpowiednich akcji i przesyłanie requestów do serwera.
 
-### Kompilacja 
+### Kompilacja i uruchomienie:
 
 **Plik server.cpp:**
 g++ -std=c++11 -Wall -o server server.cpp -lstdc++
