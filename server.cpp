@@ -99,23 +99,23 @@ void addEvent(int client_sock, const Request& request, ThreadData& thread_data) 
 // Function to handle deleting events from the calendar
 void deleteEvent(int client_sock, const Request& request, ThreadData& thread_data) {
     string response_message;
-    
-    int id_to_delete = request.event_id;
     lock_guard<mutex> lock(thread_data.data_mutex);
-    
+
     // Find the event by ID
     auto it = find_if(thread_data.calendar.begin(), thread_data.calendar.end(),
-                      [request](const CalendarEvent& event) { return event.event_id == request.event_id; })
+                      [request](const CalendarEvent& event) { return event.event_id == request.event_id; });
+
     if (it != thread_data.calendar.end()) {
         // Event found, erase it from the calendar
         thread_data.calendar.erase(it);
         response_message = "Event deleted successfully!";
     } else {
-    response_message = "Event not found!";
+        response_message = "Event not found!";
     }
 
     send(client_sock, response_message.c_str(), response_message.length(), 0);
 }
+
 
 // Function to handle showing all events in the calendar
 void showEvents(int client_sock, const Request& request, ThreadData& thread_data) {
