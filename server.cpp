@@ -124,7 +124,7 @@ void showEvents(int client_sock, const Request& request, ThreadData& thread_data
     lock_guard<mutex> lock(thread_data.data_mutex);
 
     for (const CalendarEvent& event : thread_data.calendar) {
-        response_message += "ID: " + to_string(event.event_id) + ", event: " + event.event_description + "\n";
+        response_message += "ID: " + to_string(event.event_id) + ", event: " + event.event_title + "\n";
     }
 
     // Print the events to the server console
