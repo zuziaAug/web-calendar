@@ -21,12 +21,7 @@ g++ -std=c++11 -Wall -o server server.cpp -lstdc++
 
 **Dla niektórych urządzeń do poprawnej kompilacji wymagane jest dołączenie -pthread na końcu polecenia!**
 
-Pliki klienta, ze względu na stworzenie GUI w frameworku Qt (użycie Qt Creator), wymagają kilku kroków do skompilowania i uruchomienia:
-**TO DO**
-
-
-
-
+W cel uruchomieniu klienta należy przejść do folderu **build**. W tym miejscu otworzyć terminal i uruchomić polecenie: **chmod u+x client_gui**. Bez tego, użytkownik nie będzie miał prawa wykonania danego pliku. Ze względu na stworzenie GUI w frameworku Qt (użycie Qt Creator), klient wymaga jedynie uruchomienia poprzez polecenie: **./client_gui**.
 
 ### Działanie programu
 Po połączeniu z serwerem, klientowi wyświetla się okienko z opcjami do wyboru. Klient może zmienić port i nazwę serwera, a także nadać sobie ID. Po kliknięciu przycisku 'Connect', klient łączy się z serwerem. Wynik połączenia jest pokazywany zarówno na serwerze, jak i w okienku klienta. Niżej widnieje miejsce na wpisanie danych nowego wydarzenia do kalendarza i dodania go. Dodatkowo, klient może zobaczyć wszystkie istniejące w kalendarzu wydarzenia, a także wszystkich aktualnie połączonych klientów.
