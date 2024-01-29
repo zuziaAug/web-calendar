@@ -103,41 +103,28 @@ void deleteEvent(int client_sock, const Request& request, ThreadData& thread_dat
     int id_to_delete = request.event_id;
     lock_guard<mutex> lock(thread_data.data_mutex);
     
-    // // Find the event by ID
-    // auto it = find_if(thread_data.calendar.begin(), thread_data.calendar.end(),
-    //                   [request](const CalendarEvent& event) { return event.event_id == request.event_id; });
-
-    auto it = thread_data.calendar.begin();
-    while(it != thread_data.calendar.end()) {
-        cout << "event_id: " << it->event_id;
-        if(it->event_id == id_to_delete) {
-            thread_data.calendar.erase(it);
-            response_message = "Event deleted successfully!";
-            send(client_sock, response_message.c_str(), response_message.length(), 0);
-            break;
-        }
-        ++it;
-    }
-    
-    // if (it != thread_data.calendar.end()) {
-    //     // Event found, erase it from the calendar
-    //     thread_data.calendar.erase(it);
-    //     response_message = "Event deleted successfully!";
-    // } else {
+    // Find the event by ID
+    auto it = find_if(thread_data.calendar.begin(), thread_data.calendar.end(),
+                      [request](const CalendarEvent& event) { return event.event_id == request.event_id; })
+    if (it != thread_data.calendar.end()) {
+        // Event found, erase it from the calendar
+        thread_data.calendar.erase(it);
+        response_message = "Event deleted successfully!";
+    } else {
     response_message = "Event not found!";
-    //}
+    }
 
     send(client_sock, response_message.c_str(), response_message.length(), 0);
 }
 
 // Function to handle showing all events in the calendar
 void showEvents(int client_sock, const Request& request, ThreadData& thread_data) {
-    string response_message = "Calendar events:\n";
+    string response_message = "Calendar events: \n";
 
     lock_guard<mutex> lock(thread_data.data_mutex);
 
     for (const CalendarEvent& event : thread_data.calendar) {
-        response_message += "ID: " + to_string(event.event_id) + ", Description: " + event.event_description + "\n";
+        response_message += "ID: " + to_string(event.event_id) + ", event: " + event.event_description + "\n";
     }
 
     // Print the events to the server console
@@ -156,7 +143,6 @@ void showEvents(int client_sock, const Request& request, ThreadData& thread_data
 // Function to handle client registration
 void registerClient(int client_sock, const Request& request, ThreadData& thread_data) {
     string response_message = "Connected successfully!";
-    unordered_map<int, int>& client_id_sock_map = thread_data.client_id_sock_map;
     cout << "Active client with id: " << to_string(request.client_id) << " registered" << endl;
 
     lock_guard<mutex> lock(thread_data.data_mutex);
