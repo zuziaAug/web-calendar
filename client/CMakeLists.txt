@@ -21,9 +21,6 @@ set_target_properties(client_gui PROPERTIES
     MACOSX_BUNDLE TRUE
 )
 
-set(SERVER_SOURCES ../server.cpp)
-qt_add_executable(server ${SERVER_SOURCES})
-
 target_link_libraries(client_gui PRIVATE
     Qt6::Core
     Qt6::Gui
