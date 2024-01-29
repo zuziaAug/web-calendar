@@ -169,24 +169,6 @@ void MainWindow::addEvent()
 
 }
 
-/*
-                // DELETE_EVENT
-                string event_id_to_delete;
-                qDebug() << "Enter event ID to delete: ";
-                getline(cin, event_id_to_delete);
-
-                try {
-                    action = "DELETE_EVENT";
-                    int event_id = stoi(event_id_to_delete);
-                    Request request{client_id, action, "", "", DateTime{}, DateTime{}, event_id};
-                    sendRequest(request);
-                } catch (const invalid_argument& e) {
-                    qDebug() << "Invalid input. Please enter a valid integer.";
-                } catch (const out_of_range& e) {
-                    qDebug() << "Input out of range for integer.";
-                }
-*/
-
 void MainWindow::showClients()
 {
     showAllClientsButton->setEnabled(false);
