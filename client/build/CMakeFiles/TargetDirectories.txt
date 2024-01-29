@@ -1,0 +1,8 @@
+/home/oko/web-calendar/client/build/CMakeFiles/client_gui.dir
+/home/oko/web-calendar/client/build/CMakeFiles/edit_cache.dir
+/home/oko/web-calendar/client/build/CMakeFiles/rebuild_cache.dir
+/home/oko/web-calendar/client/build/CMakeFiles/list_install_components.dir
+/home/oko/web-calendar/client/build/CMakeFiles/install.dir
+/home/oko/web-calendar/client/build/CMakeFiles/install/local.dir
+/home/oko/web-calendar/client/build/CMakeFiles/install/strip.dir
+/home/oko/web-calendar/client/build/CMakeFiles/client_gui_autogen.dir
