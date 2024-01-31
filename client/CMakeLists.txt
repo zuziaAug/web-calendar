@@ -30,6 +30,7 @@ target_link_libraries(client_gui PRIVATE
 
 install(TARGETS client_gui
     BUNDLE DESTINATION .
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
 
