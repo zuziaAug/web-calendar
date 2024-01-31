@@ -30,20 +30,15 @@ target_link_libraries(client_gui PRIVATE
 
 install(TARGETS client_gui
     BUNDLE DESTINATION .
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    //LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
 
-qt_generate_deploy_script(
+qt_generate_deploy_app_script(
     TARGET client_gui
-    OUTPUT_SCRIPT client_gui_d
-    CONTENT "
+    OUTPUT_SCRIPT deploy_script
     
-qt_deploy_runtime_dependencies(
-    EXECUTABLE \"${executable_path}\"
-    GENERATE_QT_CONF
-    VERBOSE
-)"
+    NO_UNSUPPORTED_PLATFORM_ERROR
 )
 
 install(SCRIPT ${deploy_script})
