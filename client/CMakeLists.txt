@@ -5,7 +5,7 @@ project(client VERSION 0.1 LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(Qt6 REQUIRED COMPONENTS Core Gui Network Widgets)
+find_package(Qt6 REQUIRED COMPONENTS Core Gui Test Network Widgets)
 
 qt_standard_project_setup()
 
@@ -14,6 +14,10 @@ qt_add_executable(client_gui
     mainwindow.h mainwindow.cpp
     senderthread.h senderthread.cpp
     receiverthread.h receiverthread.cpp
+)
+
+qt_add_executable(testParser
+    tst_parser.cpp
 )
 
 set_target_properties(client_gui PROPERTIES
@@ -26,6 +30,10 @@ target_link_libraries(client_gui PRIVATE
     Qt6::Gui
     Qt6::Network
     Qt6::Widgets
+)
+
+target_link_libraries(testParser PRIVATE
+    Qt6::Test
 )
 
 install(TARGETS client_gui
