@@ -33,3 +33,17 @@ install(TARGETS client_gui
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
+
+qt_generate_deploy_script(
+    TARGET client_gui
+    OUTPUT_SCRIPT client_gui_d
+    CONTENT "
+    
+qt_deploy_runtime_dependencies(
+    EXECUTABLE \"${executable_path}\"
+    GENERATE_QT_CONF
+    VERBOSE
+)"
+)
+
+install(SCRIPT ${deploy_script})
